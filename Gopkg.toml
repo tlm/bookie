@@ -28,3 +28,11 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[override]]
+  name = "k8s.io/client-go"
+  version = "v8.0.0"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  revision = "103fd098999dc9c0c88536f5c9ad2e5da39373ae"
