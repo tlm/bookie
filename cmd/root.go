@@ -1,7 +1,13 @@
 package cmd
 
 import (
+	log "github.com/sirupsen/logrus"
+
 	"github.com/spf13/cobra"
+
+	"github.com/tlmiller/bookie/pkg/api"
+	"github.com/tlmiller/bookie/pkg/engine"
+	exconfig "github.com/tlmiller/bookie/pkg/executor/config"
 )
 
 var (
@@ -19,9 +25,17 @@ var RootCmd = &cobra.Command{
 }
 
 func execute(cmd *cobra.Command, args []string) {
+	_ = api.NewServer()
+	_ = engine.NewEngine()
+
+	_, err := exconfig.ExecutorsForConfig()
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
 }
 
 func init() {
+	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "",
 		"kubeconfig path")
 	RootCmd.PersistentFlags().StringVar(&kubeConfig, "master", "",

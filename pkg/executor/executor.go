@@ -6,7 +6,7 @@ import (
 )
 
 type Executor interface {
-	ApplyAction(action controller.Action) error
+	ApplyAction(action *controller.Action) error
 	Authority() domain.Domain
 	Service() string
 }
