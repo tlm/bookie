@@ -26,6 +26,14 @@ func (d Domain) EndsWithRoot() bool {
 	return r == Root
 }
 
+func FromLabels(labels ...string) Domain {
+	join := Domain(strings.Join(labels, string(Separator)))
+	if !join.EndsWithRoot() {
+		join = join + Domain(Root)
+	}
+	return join
+}
+
 func (d Domain) HashValue() (Domain, error) {
 	hash, err := idna.Display.ToASCII(string(d))
 	if err != nil {

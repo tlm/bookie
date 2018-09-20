@@ -25,12 +25,12 @@ func ExecutorsForConfig() ([]executor.Executor, error) {
 	}
 
 	executors := make([]executor.Executor, len(confs))
-	for _, conf := range confs {
+	for i, conf := range confs {
 		ex, err := makeExecutor(&conf)
 		if err != nil {
 			return nil, errors.Wrap(err, "making executors from configuration")
 		}
-		executors = append(executors, ex)
+		executors[i] = ex
 	}
 	return executors, nil
 }

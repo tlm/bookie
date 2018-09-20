@@ -1,4 +1,4 @@
-package k8
+package client
 
 import (
 	"github.com/pkg/errors"
@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func ClientForConfig(k8Master string, k8Conf string) (*kubernetes.Clientset, error) {
+func NewForConfig(k8Master string, k8Conf string) (*kubernetes.Clientset, error) {
 	r, err := clientcmd.BuildConfigFromFlags("", k8Conf)
 	if err != nil {
 		return nil, errors.Wrap(err, "geting client rest config")

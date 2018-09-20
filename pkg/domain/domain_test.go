@@ -4,6 +4,32 @@ import (
 	"testing"
 )
 
+func TestFromlabels(t *testing.T) {
+	tests := []struct {
+		Labels []string
+		Value  Domain
+	}{
+		{
+			[]string{"example", "com"},
+			Domain("example.com."),
+		},
+		{
+			[]string{"test", "example", "com"},
+			Domain("test.example.com."),
+		},
+		{
+			[]string{"Www", "tESt", "台灣"},
+			Domain("Www.tESt.台灣."),
+		},
+	}
+
+	for _, test := range tests {
+		if o := FromLabels(test.Labels...); o != test.Value {
+			t.Errorf("expected output of labels %s == %s", o, test.Value)
+		}
+	}
+}
+
 func TestHashValue(t *testing.T) {
 	tests := []struct {
 		Domain string

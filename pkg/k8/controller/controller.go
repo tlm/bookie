@@ -1,5 +1,6 @@
 package controller
 
 type Controller interface {
-	ActionStream() chan<- Action
+	Run(<-chan struct{})
+	SetEventHandler(ActionEventHandler)
 }

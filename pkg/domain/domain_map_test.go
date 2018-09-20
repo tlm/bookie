@@ -59,3 +59,43 @@ func TestDomainMapGet(t *testing.T) {
 		t.Fatalf("failed to get value for key in domain map, does not exist")
 	}
 }
+
+func TestDomainGetNearestRoot(t *testing.T) {
+	tests := []struct {
+		Domains []Domain
+		Key     Domain
+		Value   Domain
+	}{
+		{
+			[]Domain{Domain("example.com")},
+			Domain("example.com"),
+			Domain("example.com"),
+		},
+		{
+			[]Domain{Domain("example.com")},
+			Domain("www.example.com"),
+			Domain("example.com"),
+		},
+	}
+
+	for _, test := range tests {
+		dm := NewDomainMap()
+		for _, dt := range test.Domains {
+			err := dm.Set(dt, dt)
+			if err != nil {
+				t.Fatalf("unexepected error set domain map key: %v", err)
+			}
+		}
+
+		val, exists := dm.GetNearestRoot(test.Key)
+		if !exists {
+			t.Fatalf("domain map get nearest root no value for key %s, expected %s",
+				test.Key, test.Value)
+		}
+
+		if val != test.Value {
+			t.Fatalf("expected domain map get nearest root value to be %s and not %s",
+				test.Value, val)
+		}
+	}
+}

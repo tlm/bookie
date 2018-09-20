@@ -1,8 +1,6 @@
 package consul
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/consul/api"
 
 	"github.com/pkg/errors"
@@ -31,6 +29,8 @@ func (e *Executor) ApplyAction(action *controller.Action) error {
 	switch action.Action {
 	case controller.METHOD_ADD, controller.METHOD_UPDATE:
 		return e.upsertAction(action)
+	case controller.METHOD_CHECK:
+		return e.checkAction(action)
 	case controller.METHOD_DELETE:
 		return e.deleteAction(action)
 	default:
@@ -40,6 +40,42 @@ func (e *Executor) ApplyAction(action *controller.Action) error {
 
 func (e *Executor) Authority() domain.Domain {
 	return DOMAIN.Prepend("service", e.datacenter)
+}
+
+func (e *Executor) checkAction(action *controller.Action) error {
+	var (
+		ok  bool
+		sub domain.Domain
+	)
+	if sub, ok = e.Authority().IsSubDomain(action.FQDN); !ok {
+		return errors.Errorf("action fqdn '%s' is not a subdomain", action.FQDN)
+	}
+
+	services, _, err := e.client.Catalog().Service(string(sub), "", &api.QueryOptions{
+		Datacenter: e.datacenter,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "checking service status for sub domain '%s'", sub)
+	}
+
+	found := false
+	serviceID := actionServiceID(action)
+	for _, s := range services {
+		if s.ID != serviceID {
+			continue
+		}
+		found = true
+		if s.Address != action.Value ||
+			s.Node != string(sub) ||
+			s.ServiceAddress != action.Value {
+			e.upsertAction(action)
+		}
+	}
+
+	if !found {
+		e.upsertAction(action)
+	}
+	return nil
 }
 
 func (e *Executor) Datacenter() string {
@@ -57,7 +93,7 @@ func (e *Executor) deleteAction(action *controller.Action) error {
 
 	_, err := e.client.Catalog().Deregister(&api.CatalogDeregistration{
 		Datacenter: e.datacenter,
-		ServiceID:  fmt.Sprintf("%s-%s", action.ID, string(action.Type)),
+		ServiceID:  actionServiceID(action),
 	}, &api.WriteOptions{})
 
 	if err != nil {
@@ -102,7 +138,7 @@ func (e *Executor) upsertAction(action *controller.Action) error {
 		Node:       string(sub),
 		Service: &api.AgentService{
 			Address: action.Value,
-			ID:      fmt.Sprintf("%s-%s", action.ID, string(action.Type)),
+			ID:      actionServiceID(action),
 			Service: string(sub),
 		},
 		SkipNodeUpdate: false,
